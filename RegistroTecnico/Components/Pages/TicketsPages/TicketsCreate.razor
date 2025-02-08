@@ -1,6 +1,5 @@
-﻿﻿@page "/Ticket/Create"
-@using Registrotecnico.Models
-@using Registrotecnico.Services
+﻿@page "/Ticket/Create"
+@using RegistroTecnico.Models
 @inject TicketServices ticketServices
 @inject ClienteServices clienteServices
 @inject TecnicoService tecnicoServices
@@ -96,7 +95,7 @@
 @code {
     public Tickets ticket { get; set; } = new Tickets();
     public List<Tickets> listaTickets { get; set; } = new List<Tickets>();
-    public List<Cliente> listaClientes { get; set; } = new List<Cliente>();
+    public List<Clientes> listaClientes { get; set; } = new List<Clientes>();
     public List<Tecnicos> listaTecnicos { get; set; } = new List<Tecnicos>();
 
     protected override async Task OnInitializedAsync()
