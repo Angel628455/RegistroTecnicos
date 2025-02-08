@@ -1,0 +1,71 @@
+﻿@page "/Cliente/Index"
+@inject ClienteServices clienteServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<EditForm Model="ListaClientes" class="border shadow-lg p-3 rounded">
+    <div class="card-header bg-primary text-center text-white py-2 rounded">
+        <h3 style="font-weight: bold;" class="font-weight-bold">Consulta de Clientes</h3>
+    </div>
+
+    <div class="col md-3 text-end">
+        <a href="//Create" class="btn btn-success"><Icon Name="IconName.Pencil" />Crear</a>
+    </div>
+
+    <table class="table table-bordered text-center">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th class="text-white">ClienteId</th>
+                <th class="text-white">Nombres</th>
+                <th class="text-white">FechaIngreso</th>
+                <th class="text-white">Direccion</th>
+                <th class="text-white">LimiteCredito</th>
+                <th class="text-white">RNC</th>
+                <th class="text-white">TecnicoId</th>
+                <th class="text-white">Nombres</th>
+                <th class="text-white">Editar</th>
+                <th class="text-white">Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cliente in ListaClientes)
+            {
+                <tr>
+                    <td>@cliente.ClienteId</td>
+                    <td>@cliente.Nombres</td>
+                    <td>@cliente.FechaIngreso</td>
+                    <td>@cliente.Direccion</td>
+                    <td>@cliente.LimiteCredito</td>
+                    <td>@cliente.Rnc</td>
+
+                    
+
+                    <td>
+                        <a href="/Cliente/Edit/@cliente.ClienteId" class="btn-editar">
+                            <span class="bi bi-pencil-square" style="font-size: 2rem;"></span>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="/Cliente/Delete/@cliente.ClienteId" class="btn-eliminar">
+                            <span class="bi bi-dash-circle-fill" style="font-size: 2rem;"></span>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="card-footer text-start">
+        <p>Total de Clientes: @ListaClientes.Count</p>
+    </div>
+</EditForm>
+
+@code {
+    public Cliente clientes = new Cliente();
+    public List<Cliente> ListaClientes = new List<Cliente>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaClientes = await clienteServices.Listar(c => true);
+    }
+}
