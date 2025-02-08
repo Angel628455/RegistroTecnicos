@@ -8,23 +8,47 @@
         <h3 style="font-weight: bold;" class="font-weight-bold">Consulta de Clientes</h3>
     </div>
 
+ 
+    <div class="row mb-3 align-items-end">
+        <div class="col-md-3">
+            <label for="Filtro" class="form-label">Filtrar por:</label>
+            <select @bind="filtro" class="form-select">
+                <option value="ClienteId">ClienteId</option>
+                <option value="RNC">RNC</option>
+                <option value="Nombres">Nombres</option>
+                <option value="TecnicoId">TecnicoId</option>
+                <option value="Direccion">Direccion</option>
+                <option value="FechaIngreso">FechaIngreso</option>
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label for="ValorFiltro" class="form-label">Busqueda:</label>
+            <div class="input-group">
+                <input @bind="valorFiltro" class="form-control" placeholder="Buscar" />
+                <button @onclick="Buscar" class="btn btn-outline-primary" type="button">
+                    <span class="bi bi-search"></span> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="col md-3 text-end">
-        <a href="//Create" class="btn btn-success"><Icon Name="IconName.Pencil" />Crear</a>
+        <a href="/Cliente/Create" class="btn btn-success"><Icon Name="IconName.Pencil" /> Crear</a>
     </div>
 
     <table class="table table-bordered text-center">
-        <thead class="bg-primary text-white">
+        <thead class="bg-primary text-black">
             <tr>
-                <th class="text-white">ClienteId</th>
-                <th class="text-white">Nombres</th>
-                <th class="text-white">FechaIngreso</th>
-                <th class="text-white">Direccion</th>
-                <th class="text-white">LimiteCredito</th>
-                <th class="text-white">RNC</th>
-                <th class="text-white">TecnicoId</th>
-                <th class="text-white">Nombres</th>
-                <th class="text-white">Editar</th>
-                <th class="text-white">Eliminar</th>
+                <th class="text-black">ClienteId</th>
+                <th class="text-black">Nombres</th>
+                <th class="text-black">FechaIngreso</th>
+                <th class="text-black">Direccion</th>
+                <th class="text-black">LimiteCredito</th>
+                <th class="text-black">RNC</th>
+                <th class="text-black">TecnicoId</th>
+                <th class="text-black">Editar</th>
+                <th class="text-black">Eliminar</th>
             </tr>
         </thead>
         <tbody>
@@ -33,22 +57,16 @@
                 <tr>
                     <td>@cliente.ClienteId</td>
                     <td>@cliente.Nombres</td>
-                    <td>@cliente.FechaIngreso</td>
+                    <td>@cliente.FechaIngreso.ToString("yyyy-MM-dd")</td>
                     <td>@cliente.Direccion</td>
                     <td>@cliente.LimiteCredito</td>
-                    <td>@cliente.Rnc</td>
-
-                    
-
+                    <td>@cliente.RNC</td>
+                    <td>@cliente.TecnicoId</td>
                     <td>
-                        <a href="/Cliente/Edit/@cliente.ClienteId" class="btn-editar">
-                            <span class="bi bi-pencil-square" style="font-size: 2rem;"></span>
-                        </a>
+                        <a href="/Cliente/Edit/@cliente.ClienteId" class="btn btn-outline-success"><span class="bi bi-pencil-fill"></span></a>
                     </td>
                     <td>
-                        <a href="/Cliente/Delete/@cliente.ClienteId" class="btn-eliminar">
-                            <span class="bi bi-dash-circle-fill" style="font-size: 2rem;"></span>
-                        </a>
+                        <a href="/Cliente/Delete/@cliente.ClienteId" class="btn btn-outline-danger"><span class="bi bi-trash-fill"></span></a>
                     </td>
                 </tr>
             }
@@ -61,11 +79,48 @@
 </EditForm>
 
 @code {
-    public Cliente clientes = new Cliente();
-    public List<Cliente> ListaClientes = new List<Cliente>();
+    public Clientes clientes = new Clientes();
+    public List<Clientes> ListaClientes = new List<Clientes>();
+    public string filtro = "ClienteId";
+    public string valorFiltro = "";
 
     protected override async Task OnInitializedAsync()
     {
         ListaClientes = await clienteServices.Listar(c => true);
+    }
+
+    public async Task Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(valorFiltro))
+        {
+            ListaClientes = await clienteServices.Listar(c => true);
+        }
+        else
+        {
+            if (filtro == "ClienteId" && int.TryParse(valorFiltro, out int clienteId))
+            {
+                ListaClientes = await clienteServices.Listar(c => c.ClienteId == clienteId);
+            }
+            else if (filtro == "RNC")
+            {
+                ListaClientes = await clienteServices.Listar(c => c.RNC.Contains(valorFiltro));
+            }
+            else if (filtro == "Nombres")
+            {
+                ListaClientes = await clienteServices.Listar(c => c.Nombres.Contains(valorFiltro));
+            }
+            else if (filtro == "TecnicoId" && int.TryParse(valorFiltro, out int tecnicoId))
+            {
+                ListaClientes = await clienteServices.Listar(c => c.TecnicoId == tecnicoId);
+            }
+            else if (filtro == "Direccion")
+            {
+                ListaClientes = await clienteServices.Listar(c => c.Direccion.Contains(valorFiltro));
+            }
+            else if (filtro == "FechaIngreso" && DateTime.TryParse(valorFiltro, out DateTime fechaIngreso))
+            {
+                ListaClientes = await clienteServices.Listar(c => c.FechaIngreso == fechaIngreso);
+            }
+        }
     }
 }
