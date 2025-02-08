@@ -1,71 +1,89 @@
-﻿@page "/Clientes/Delete"
-@page "/Clientes/Delete/{ClienteId:int}"
-@using RegistroTecnico.Models
-@using RegistroTecnico.Services
-@inject ClienteServices ClienteService
+﻿@page "/Cliente/Delete/{ClienteId:int}"
+@inject ClienteServices clienteService
 @inject NavigationManager navigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Eliminar Cliente</PageTitle>
 
-@if (Cliente != null)
-{
-    <div class="container">
-        <div class="card shadow-header">
-            <div class="card-header bg-danger text-white text-center py-2 rounded">
-                <h3 class="text-center"><strong>Eliminar Cliente</strong></h3>
-            </div>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6">
+<div class="container">
+    <div class="card shadow-header">
+        <div class="card-header bg-primary text-white text-center py-2 rounded">
+            <h3><strong>Eliminar Cliente</strong></h3>
+        </div>
+
+        <div class="card-header text-center">
+            <h3 class="text-danger">¿Estás seguro de que quieres eliminar este cliente?</h3>
+        </div>
+
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-lg">
+                        <div class="card-header">
+                            <h3 class="text-center"><strong>Datos del Cliente</strong></h3>
+                        </div>
                         <div class="card-body">
-                            <p>¿Estás seguro que deseas eliminar al siguiente cliente?</p>
-                            <ul class="list-unstyled">
-                                <li><strong>ClienteId:</strong> @cliente.ClienteId</li>
-                                <li><strong>Nombre:</strong> @cliente.Nombres</li>
-                                <li><strong>Email:</strong> @cliente.Email</li>
-                                <li><strong>Teléfono:</strong> @cliente.Telefono</li>
-                            </ul>
+                            @if (cliente != null)
+                            {
+                                <ul class="list-unstyled">
+                                    <li><strong>ClienteId:</strong> @cliente.ClienteId</li>
+                                    <li><strong>Nombres:</strong> @cliente.Nombres</li>
+                                    <li><strong>Fecha Ingreso:</strong> @cliente.FechaIngreso.ToString("dd/MM/yyyy")</li>
+                                    <li><strong>Dirección:</strong> @cliente.Direccion</li>
+                                    <li><strong>Límite de Crédito:</strong> @cliente.LimiteCredito</li>
+                                    <li><strong>RNC:</strong> @cliente.RNC</li>
+                                    <li><strong>TecnicoId:</strong> @cliente.TecnicoId</li>
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-center text-danger">Cliente no encontrado.</p>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-primary" @onclick="Volver"><i class="bi bi-box-arrow-left"></i> Volver</button>
-                <button type="button" class="btn btn-outline-danger" @onclick="EliminarCliente"><i class="bi bi-trash"></i> Eliminar</button>
-            </div>
         </div>
+
+        @if (cliente != null)
+        {
+            <div class="card-footer text-center">
+                <button type="button" class="btn btn-outline-danger" @onclick="EliminarCliente"><i class="bi bi-trash-fill"></i> Eliminar</button>
+                <button type="button" class="btn btn-outline-primary" @onclick="Retroceder"><i class="bi bi-box-arrow-left"></i> Retroceder</button>
+            </div>
+        }
     </div>
-}
-else
-{
-    <p>Cliente no encontrado.</p>
-}
+</div>
 
 @code {
-        [Parameter]
-        public int ClienteId { get; set; }
-    public Cliente? cliente { get; set; } = new Cliente();
+    [Parameter]
+    public int ClienteId { get; set; }
+    public Clientes? cliente { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        cliente = await ClienteService.Buscar(ClienteId);
+        if (ClienteId > 0)
+        {
+            cliente = await clienteService.Buscar(ClienteId);
+        }
     }
 
     private async Task EliminarCliente()
     {
-        if (cliente != null)
+        if (ClienteId == 0 || cliente == null)
         {
-            var eliminado = await ClienteService.Eliminar(cliente.ClienteId);
-            if (eliminado)
-            {
-                navigationManager.NavigateTo("/Clientes/Index");
-            }
-            else
-            {
-                Console.WriteLine
-            }
+            return;
+        }
+
+        bool eliminado = await clienteService.Eliminar(ClienteId);
+        if (eliminado)
+        {
+            Retroceder();
         }
     }
-}
 
-    
+    private void Retroceder()
+    {
+        navigationManager.NavigateTo("/Cliente/Index");
+    }
+}
