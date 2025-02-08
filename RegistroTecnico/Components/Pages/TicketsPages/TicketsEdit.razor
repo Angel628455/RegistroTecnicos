@@ -1,0 +1,183 @@
+﻿@page "/Ticket/Edit/{TicketId:int}"
+@inject TicketServices ticketService
+@inject TecnicoService tecnicoService
+@inject NavigationManager navigationManager
+
+@rendermode InteractiveServer
+
+<EditForm Model="tickets" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="card shadow-lg border-0" style="background-color: white;">
+        <div class="card-header bg-primary text-center text-white py-2 rounded">
+            <h3 style="font-weight: bold;" class="font-weight-bold">Modificar Ticket</h3>
+        </div>
+
+        <div class="card-body">
+            @if (isLoading)
+            {
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+            }
+            else
+            {
+                @*TicketId*@
+                <div class="mb-3">
+                    <label for="TicketId" class="form-label">TicketId:</label>
+                    <InputNumber @bind-Value="tickets.TicketId" class="form-control" />
+                </div>
+
+                @*Fecha*@
+                <div class="mb-3">
+                    <label for="Fecha" class="form-label">Fecha:</label>
+                    <InputDate @bind-Value="tickets.Fecha" class="form-control" />
+                </div>
+
+                @*Prioridad*@
+                <div class="mb-3">
+                    <label for="Prioridad" class="form-label">Prioridad:</label>
+                    <InputNumber @bind-Value="tickets.Prioridad" class="form-control" />
+                    <ValidationMessage For="@(() => tickets.Prioridad)" />
+                </div>
+
+                @*ClienteId*@
+                <div class="mb-3">
+                    <label for="ClienteId" class="form-label">ClienteId:</label>
+                    <InputNumber @bind-Value="tickets.ClienteId" class="form-control" />
+                </div>
+
+                @*Asunto*@
+                <div class="mb-3">
+                    <label for="Asunto" class="form-label">Asunto:</label>
+                    <InputText @bind-Value="tickets.Asunto" class="form-control" />
+                    <ValidationMessage For="@(() => tickets.Asunto)" />
+                </div>
+
+                @*Descripcion*@
+                <div class="mb-3">
+                    <label for="Descripcion" class="form-label">Descripción:</label>
+                    <InputTextArea @bind-Value="tickets.Descripcion" class="form-control" />
+                    <ValidationMessage For="@(() => tickets.Descripcion)" />
+                </div>
+
+                @*TiempoInvertido*@
+                <div class="mb-3">
+                    <label for="TiempoInvertido" class="form-label">Tiempo Invertido:</label>
+                    <InputNumber @bind-Value="tickets.TiempoInvertido" class="form-control" />
+                    <ValidationMessage For="@(() => tickets.TiempoInvertido)" />
+                </div>
+
+                @*TecnicoId*@
+                <div class="mb-3">
+                    <label for="TecnicoId" class="form-label">Técnico:</label>
+                    <InputSelect @bind-Value="tickets.TecnicoId" class="form-control">
+                        <option value="">-- Seleccione un Técnico --</option>
+                        @foreach (var tecnico in Tecnicos)
+                        {
+                            <option value="@tecnico.TecnicoId">@tecnico.Nombre</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => tickets.TecnicoId)" />
+                </div>
+            }
+        </div>
+
+        <div class="card-footer d-flex justify-content-lg-center text-center">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span>Nuevo</button>
+                <button type="submit" class="btn btn-outline-success ml-2"><span class="bi bi-check-circle-fill"></span>Guardar</button>
+                <button type="button" class="btn btn-outline-danger" @onclick="Retroceder"><span class="bi bi-arrow-bar-left"></span>Retroceder</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int TicketId { get; set; }
+    public Tickets tickets { get; set; } = new Tickets();
+    public List<Tecnicos> Tecnicos { get; set; } = new List<Tecnicos>();
+    private bool existe = false;
+    private bool isLoading = true; // Track loading state
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Start loading
+            isLoading = true;
+
+            Tecnicos = await tecnicoService.Listar(c => true);
+            if (TicketId != 0)
+            {
+                await Buscar();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error here (without IToastService)
+            Console.Error.WriteLine($"Error al cargar los técnicos: {ex.Message}");
+        }
+        finally
+        {
+            // End loading
+            isLoading = false;
+        }
+    }
+
+    public async Task Buscar()
+    {
+        existe = false;
+        var ticketEncontrado = await ticketService.Buscar(TicketId);
+        if (ticketEncontrado != null)
+        {
+            tickets = ticketEncontrado;
+        }
+        else
+        {
+            // Display error without IToastService
+            Console.Error.WriteLine("Ticket no encontrado.");
+            await Nuevo();
+        }
+    }
+
+    public async Task<bool> Validar()
+    {
+        var listaTickets = await ticketService.Listar(t => t.Asunto.ToLower() == tickets.Asunto.ToLower() && t.TicketId != tickets.TicketId);
+        existe = listaTickets.Any();
+        return !existe;
+    }
+
+    public async Task Nuevo()
+    {
+        tickets = new Tickets();
+        existe = false;
+    }
+
+    public async Task Guardar()
+    {
+        if (!await Validar())
+        {
+            // Display warning without IToastService
+            Console.Error.WriteLine("Ya existe un ticket con ese asunto en la consulta.");
+            return;
+        }
+
+        var guardado = await ticketService.Guardar(tickets);
+        if (guardado)
+        {
+            Console.WriteLine("Se ha modificado el ticket correctamente.");
+            await Nuevo();
+            navigationManager.NavigateTo("/Ticket/Index");
+        }
+        else
+        {
+            Console.Error.WriteLine("Error al guardar el ticket.");
+        }
+    }
+
+    public void Retroceder()
+    {
+        navigationManager.NavigateTo("/Ticket/Index");
+    }
+}

@@ -1,0 +1,100 @@
+﻿@page "/Ticket/Delete/{TicketId:int}"
+@inject TicketServices ticketService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Eliminar Ticket</PageTitle>
+
+<div class="container">
+    <div class="card shadow-header">
+        <div class="card-header bg-primary text-white text-center py-2 rounded">
+            <h3><strong>Eliminar Ticket</strong></h3>
+        </div>
+
+        <div class="card-header text-center">
+            <h3 class="text-danger">¿Estás seguro de que quieres eliminar este ticket?</h3>
+        </div>
+
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-lg">
+                        <div class="card-header">
+                            <h3 class="text-center"><strong>Datos del Ticket</strong></h3>
+                        </div>
+                        <div class="card-body">
+                            @if (ticket != null)
+                            {
+                                <ul class="list-unstyled">
+                                    <li><strong>TicketId:</strong> @ticket.TicketId</li>
+                                    <li><strong>Fecha:</strong> @ticket.Fecha.ToString("dd/MM/yyyy")</li>
+                                    <li><strong>Prioridad:</strong> @ticket.Prioridad</li>
+                                    <li><strong>ClienteId:</strong> @ticket.ClienteId</li>
+                                    <li><strong>Asunto:</strong> @ticket.Asunto</li>
+                                    <li><strong>Descripción:</strong> @ticket.Descripcion</li>
+                                    <li><strong>Tiempo Invertido:</strong> @ticket.TiempoInvertido</li>
+                                    <li><strong>TécnicoId:</strong> @ticket.TecnicoId</li>
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-center text-danger">Ticket no encontrado.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (ticket != null)
+        {
+            <div class="card-footer text-center">
+                <button type="button" class="btn btn-outline-danger" @onclick="EliminarTicket"><i class="bi bi-trash-fill"></i> Eliminar</button>
+                <button type="button" class="btn btn-outline-primary" @onclick="Retroceder"><i class="bi bi-box-arrow-left"></i> Retroceder</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int TicketId { get; set; }
+    public Tickets? ticket { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Ensure ticket is loaded successfully
+        if (TicketId > 0)
+        {
+            ticket = await ticketService.Buscar(TicketId);
+            if (ticket == null)
+            {
+                navigationManager.NavigateTo("/Ticket/Index"); // Redirect if ticket is not found
+            }
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Ticket/Index"); // Redirect if TicketId is invalid
+        }
+    }
+
+    private async Task EliminarTicket()
+    {
+        if (ticket == null)
+        {
+            // Ensure that the ticket exists before trying to delete it
+            return;
+        }
+
+        bool eliminado = await ticketService.Eliminar(TicketId);
+        if (eliminado)
+        {
+            Retroceder(); // Navigate back after deletion
+        }
+    }
+
+    private void Retroceder()
+    {
+        navigationManager.NavigateTo("/Ticket/Index"); // Navigate to the ticket list page
+    }
+}
