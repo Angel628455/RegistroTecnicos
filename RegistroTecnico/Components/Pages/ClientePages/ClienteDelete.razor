@@ -1,0 +1,71 @@
+﻿@page "/Clientes/Delete"
+@page "/Clientes/Delete/{ClienteId:int}"
+@using RegistroTecnico.Models
+@using RegistroTecnico.Services
+@inject ClienteServices ClienteService
+@inject NavigationManager navigationManager
+
+<PageTitle>Eliminar Cliente</PageTitle>
+
+@if (Cliente != null)
+{
+    <div class="container">
+        <div class="card shadow-header">
+            <div class="card-header bg-danger text-white text-center py-2 rounded">
+                <h3 class="text-center"><strong>Eliminar Cliente</strong></h3>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card-body">
+                            <p>¿Estás seguro que deseas eliminar al siguiente cliente?</p>
+                            <ul class="list-unstyled">
+                                <li><strong>ClienteId:</strong> @cliente.ClienteId</li>
+                                <li><strong>Nombre:</strong> @cliente.Nombres</li>
+                                <li><strong>Email:</strong> @cliente.Email</li>
+                                <li><strong>Teléfono:</strong> @cliente.Telefono</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" @onclick="Volver"><i class="bi bi-box-arrow-left"></i> Volver</button>
+                <button type="button" class="btn btn-outline-danger" @onclick="EliminarCliente"><i class="bi bi-trash"></i> Eliminar</button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <p>Cliente no encontrado.</p>
+}
+
+@code {
+        [Parameter]
+        public int ClienteId { get; set; }
+    public Cliente? cliente { get; set; } = new Cliente();
+
+    protected override async Task OnInitializedAsync()
+    {
+        cliente = await ClienteService.Buscar(ClienteId);
+    }
+
+    private async Task EliminarCliente()
+    {
+        if (cliente != null)
+        {
+            var eliminado = await ClienteService.Eliminar(cliente.ClienteId);
+            if (eliminado)
+            {
+                navigationManager.NavigateTo("/Clientes/Index");
+            }
+            else
+            {
+                Console.WriteLine
+            }
+        }
+    }
+}
+
+    
