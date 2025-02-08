@@ -1,104 +1,149 @@
-﻿@page "/Clientes/Edit/{ClienteId:int}"
-@using Microsoft.AspNetCore.Components.Forms
-@using RegistroTecnico.Models
-@using RegistroTecnico.Services
-@inject ClienteServices clienteservice
-@inject NavigationManager NavigationManager
+﻿@page "/Cliente/Edit"
+@page "/Cliente/Edit/{ClienteId:int}"
+@inject ClienteServices clienteService
+@inject TecnicoService tecnicoService
+@inject NavigationManager navigationManager
 
-<div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
-    <div class="card-header bg-primary text-white" style="text-align: center;">
-        <h3> <i class="fas fa-clipboard-list"></i> Editar Cliente</h3>
-    </div>
+@rendermode InteractiveServer
 
-    <div class="card-body">
+<EditForm Model="clientes" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="card shadow-lg border-0" style="background-color: white;">
 
-        <div class="row">
+        <div class="card-header bg-primary text-center text-white py-2 rounded">
+            <h3 style="font-weight: bold;" class="font-weight-bold">Modificar Cliente</h3>
+        </div>
 
-            <div class="col-md-6 mb-3">
+        <div class="card-body">
+            @*ClienteId*@ 
+            <div class="mb-3">
                 <label for="ClienteId" class="form-label">ClienteId:</label>
-                <div class="input-group">
-                    <div style="width: 40%; height: 1em;">
-                        <InputNumber @bind-Value="clientes.ClienteId" class="form-control" style="font-size: 0.8em;" aria-describedby="BotonBuscar" />
-                    </div>
-                </div>
+                <InputNumber @bind-Value="clientes.ClienteId" class="form-control" />
+            </div>
+            @*Nombres*@ 
+            <div class="mb-3">
+                <label for="Nombres" class="form-label">Nombres:</label>
+                <InputText @bind-Value="clientes.Nombres" class="form-control" />
+                <ValidationMessage For="@(() => clientes.Nombres)" />
+            </div>
+            @*Direccion*@ 
+            <div class="mb-3">
+                <label for="Direccion" class="form-label">Dirección:</label>
+                <InputText @bind-Value="clientes.Direccion" class="form-control" />
+                <ValidationMessage For="@(() => clientes.Direccion)" />
+            </div>
+            @*RNC*@ 
+            <div class="mb-3">
+                <label for="RNC" class="form-label">RNC:</label>
+                <InputText @bind-Value="clientes.RNC" class="form-control" />
+                <ValidationMessage For="@(() => clientes.RNC)" />
+            </div>
+            @*FechaIngreso*@ 
+            <div class="mb-3">
+                <label for="FechaIngreso" class="form-label">Fecha de Ingreso:</label>
+                <InputDate @bind-Value="clientes.FechaIngreso" class="form-control" />
+                <ValidationMessage For="@(() => clientes.FechaIngreso)" />
+            </div>
+            @*LimiteCredito*@ 
+            <div class="mb-3">
+                <label for="LimiteCredito" class="form-label">Límite de Crédito:</label>
+                <InputNumber @bind-Value="clientes.LimiteCredito" class="form-control" />
+                <ValidationMessage For="@(() => clientes.LimiteCredito)" />
+            </div>
+            @*TecnicoId*@ 
+            <div class="mb-3">
+                <label for="TecnicoId" class="form-label">Técnico:</label>
+                <InputSelect @bind-Value="clientes.TecnicoId" class="form-control">
+                    <option value="">-- Seleccione un Técnico --</option>
+                    @foreach (var tecnico in Tecnicos)
+                    {
+                        <option value="@tecnico.TecnicoId">@tecnico.Nombre</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => clientes.TecnicoId)" />
             </div>
         </div>
 
-        <div class="mb-3">
-            <label for="Nombre" class="form-label">Nombre:</label>
-            <InputText @bind-Value="clientes.Nombre" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label for="Email" class="form-label">Email:</label>
-            <InputText @bind-Value="clientes.Email" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label for="Telefono" class="form-label">Teléfono:</label>
-            <InputText @bind-Value="clientes.Telefono" class="form-control" />
-        </div>
-
-    </div>
-
-    <div class="card-footer bg-light d-flex justify-content-center mt-3">
-        <div class="btn-group">
-            <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span> Nuevo </button>
-            <button type="button" class="btn btn-outline-success ml-2" @onclick="Guardar"><span class="bi bi-check-circle-fill"></span> Guardar </button>
-            <a type="button" href="/Clientes/Index" class="btn btn-outline-danger"><span class="bi bi-arrow-bar-left"></span> Retroceder </a>
+        <div class="card-footer d-flex justify-content-lg-center text-center">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span>Nuevo</button>
+                <button type="submit" class="btn btn-outline-success ml-2"><span class="bi bi-check-circle-fill"></span>Guardar</button>
+                <button type="button" class="btn btn-outline-danger" @onclick="Retroceder"><span class="bi bi-arrow-bar-left"></span>Retroceder</button>
+            </div>
         </div>
     </div>
-</div>
+</EditForm>
 
-@code {
+@code
+{
     [Parameter]
-    public int? ClienteId { get; set; }
-    public Clientes clientes { get; set; } = new Cliente();
-    private bool Existe = false;
+    public int ClienteId { get; set; }
+    public Clientes clientes { get; set; } = new Clientes();
+    public List<Tecnicos> Tecnicos { get; set; } = new List<Tecnicos>();
+    private bool existe = false;
+    public string Mensaje { get; set; } = "";
 
     protected override async Task OnInitializedAsync()
     {
-        if (ClienteId.HasValue)
+        // Cargar lista de técnicos
+        Tecnicos = await tecnicoService.Listar(c => true);
+
+        if (ClienteId != 0)
         {
-            clientes.ClienteId = ClienteId.Value;
             await Buscar();
         }
     }
 
-    public void Nuevo()
-    {
-        clientes = new Cliente();
-        Existe = false;
-    }
-
     public async Task Buscar()
     {
-        var clienteEncontrado = await clienteservice.Buscar(clientes.ClienteId);
-
+        existe = false;
+        var clienteEncontrado = await clienteService.Buscar(ClienteId);
         if (clienteEncontrado != null)
         {
             clientes = clienteEncontrado;
+        }
+        else
+        {
+            await Nuevo();
         }
     }
 
     public async Task<bool> Validar()
     {
-        Existe = await clienteservice.Existe(clientes.ClienteId);
-        return !Existe;
+        var listaClientes = await clienteService.Listar(c => c.Nombres.ToLower() == clientes.Nombres.ToLower() && c.ClienteId != clientes.ClienteId);
+        existe = listaClientes.Any();
+        return !existe;
+    }
+
+    public async Task Nuevo()
+    {
+        clientes = new Clientes();
+        existe = false;
+        Mensaje = "";
     }
 
     public async Task Guardar()
     {
-        var guardo = await clienteservice.Guardar(clientes);
-        if (guardo)
+        if (!await Validar())
         {
-            Nuevo();
+            Mensaje = "Ya existe un cliente con ese nombre en la consulta.";
+            return;
+        }
+
+        var guardado = await clienteService.Guardar(clientes);
+        if (guardado)
+        {
+            Mensaje = "Se ha modificado el cliente correctamente.";
+            await Nuevo();
+        }
+        else
+        {
+            Mensaje = "Error al guardar el cliente.";
         }
     }
 
-    public async Task Eliminar()
+    public void Retroceder()
     {
-        var eliminado = await clienteservice.Eliminar(clientes.ClienteId);
-        Nuevo();
+        navigationManager.NavigateTo("/Cliente/Index");
     }
 }
