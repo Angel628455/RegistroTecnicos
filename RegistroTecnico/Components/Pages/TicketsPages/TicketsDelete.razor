@@ -1,8 +1,6 @@
-﻿﻿@page "/Ticket/Delete/{TicketId:int}"
-@using Registrotecnico.Models
+﻿@page "/Ticket/Delete/{TicketId:int}"
 @inject TicketServices ticketService
 @inject NavigationManager navigationManager
-@inject IToastService toastService
 @rendermode InteractiveServer
 
 <PageTitle>Eliminar Ticket</PageTitle>
@@ -65,33 +63,38 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Ensure ticket is loaded successfully
         if (TicketId > 0)
         {
             ticket = await ticketService.Buscar(TicketId);
+            if (ticket == null)
+            {
+                navigationManager.NavigateTo("/Ticket/Index"); // Redirect if ticket is not found
+            }
+        }
+        else
+        {
+            navigationManager.NavigateTo("/Ticket/Index"); // Redirect if TicketId is invalid
         }
     }
 
     private async Task EliminarTicket()
     {
-        if (TicketId == 0 || Tickets == null)
+        if (ticket == null)
         {
+            // Ensure that the ticket exists before trying to delete it
             return;
         }
 
         bool eliminado = await ticketService.Eliminar(TicketId);
         if (eliminado)
         {
-            toastService.ShowSuccess("El ticket se ha eliminado correctamente.");
-            Retroceder();
-        }
-        else
-        {
-            toastService.ShowError("Ocurrió un error al intentar eliminar el ticket.");
+            Retroceder(); // Navigate back after deletion
         }
     }
 
     private void Retroceder()
     {
-        navigationManager.NavigateTo("/Ticket/Index");
+        navigationManager.NavigateTo("/Ticket/Index"); // Navigate to the ticket list page
     }
 }
