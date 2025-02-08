@@ -60,10 +60,6 @@ public class TecnicoService(IDbContextFactory<Contexto> DbFactory)
         return await contexto.Tecnico.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Nombre == nombre);
     }
-
-
-    
-
     public async Task<List<Tecnicos>> Listar(Expression<Func<Tecnicos, bool>> criterio)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
