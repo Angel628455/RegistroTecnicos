@@ -1,0 +1,91 @@
+﻿@page "/Sistema/Create"
+@inject SistemaServices sistemaServices
+@inject NavigationManager navigationManager
+@inject IToastService toastService
+@rendermode InteractiveServer
+
+<EditForm Model="sistema" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="card shadow-lg border-0" style="background-color white">
+
+        <div class="card-header bg-primary text-center text-white py-2 rounded">
+            <h3 style="font-weight: bold;" class="font-weight-bold">Registro de Sistemas</h3>
+        </div>
+
+        <div class="card-body">
+            @* SistemaId *@ 
+            <div class="mb-3">
+                <label for="SistemaId" class="form-label">SistemaId:</label>
+                <InputNumber @bind-Value="sistema.SistemaId" class="form-control" />
+            </div>
+            @* Descripción *@ 
+            <div class="mb-3">
+                <label for="Descripcion" class="form-label">Descripción:</label>
+                <InputText @bind-Value="sistema.Descripcion" class="form-control" />
+                <ValidationMessage For="@(() => sistema.Descripcion)" />
+            </div>
+            @* Complejidad *@ 
+            <div class="mb-3">
+                <label for="Complejidad" class="form-label">Complejidad:</label>
+                <InputText @bind-Value="sistema.Complejidad" class="form-control" />
+                <ValidationMessage For="@(() => sistema.Complejidad)" />
+            </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-lg-center text-center">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary ml-2" @onclick="Nuevo"><span class="bi bi-plus"></span>Nuevo</button>
+                <button type="submit" class="btn btn-outline-success ml-2"><span class="bi bi-check-circle-fill"></span>Guardar</button>
+                <button type="button" class="btn btn-outline-danger" @onclick="Retroceder"><span class="bi bi-arrow-bar-left"></span>Retroceder</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public Sistemas sistema { get; set; } = new Sistemas();
+    private bool existe = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sistema.SistemaId = await sistemaServices.ObtenerSiguienteId();
+    }
+
+    public async Task Nuevo()
+    {
+        sistema = new Sistemas();
+        sistema.SistemaId = await sistemaServices.ObtenerSiguienteId();
+        existe = false;
+    }
+
+    public async Task<bool> Validar()
+    {
+        existe = await sistemaServices.Existe(sistema.SistemaId);
+        return existe;
+    }
+
+    public async Task Guardar()
+    {
+        if (await Validar())
+        {
+            toastService.ShowWarning("Ya existe un sistema con este ID.");
+            return;
+        }
+
+
+        sistema.SistemaId = await sistemaServices.ObtenerSiguienteId();
+
+        var guardado = await sistemaServices.Guardar(sistema);
+        if (guardado)
+        {
+            toastService.ShowSuccess("El sistema se ha guardado correctamente.");
+            await Nuevo();
+            Retroceder();
+        }
+    }
+
+    public void Retroceder()
+    {
+        navigationManager.NavigateTo("/Sistema/Index");
+    }
+}
